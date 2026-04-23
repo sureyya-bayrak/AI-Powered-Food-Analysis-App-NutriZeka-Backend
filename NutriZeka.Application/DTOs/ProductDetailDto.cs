@@ -1,42 +1,37 @@
-﻿using System.Collections.Generic;
+﻿using System;
 
-namespace NutriZeka.Domain.Entities
+namespace NutriZeka.Application.DTOs
 {
-    public class Product : BaseEntity
+    public class ProductDetailDto
     {
-        // --- Kimlik ve Marka ---
+        public Guid Id { get; set; }
         public string Barcode { get; set; }
+
+        // --- Çok Dilli İsim ve Marka ---
         public string NameTr { get; set; }
         public string NameEn { get; set; }
         public string Brand { get; set; }
-        public string Quantity { get; set; }
+        public string Quantity { get; set; } // "200 gr"
         public string ImageUrl { get; set; }
-        public string Categories { get; set; }
-
         public bool IsVerified { get; set; }
 
-        // --- Skorlar ---
+        // --- All Scores (Tasarımındaki 3'lü Daire) ---
         public string NutriScoreGrade { get; set; }
-        public string EcoScoreGrade { get; set; }
         public int NovaGroup { get; set; }
+        public string EcoScoreGrade { get; set; }
 
-        // --- Metin Alanları (Senin istediğin dinamik yapı) ---
+        // --- Insights & Ingredients (TR/EN) ---
         public string IngredientsTextTr { get; set; }
         public string IngredientsTextEn { get; set; }
-
-        // Alerjenleri burada virgülle ayrılmış "Süt, Yer Fıstığı, Gluten" gibi tutacağız
         public string AllergensTr { get; set; }
         public string AllergensEn { get; set; }
 
-        // --- Temel Besin Değerleri (Dashboard grafikleri için) ---
+        // --- Nutrition Facts (100g için) ---
         public double EnergyKcal { get; set; }
         public double Fat { get; set; }
         public double Carbohydrates { get; set; }
         public double Sugars { get; set; }
         public double Proteins { get; set; }
         public double Salt { get; set; }
-
-        // --- İlişkiler ---
-    
     }
 }
