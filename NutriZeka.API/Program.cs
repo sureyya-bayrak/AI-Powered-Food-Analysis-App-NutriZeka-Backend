@@ -61,16 +61,22 @@ builder.Services.AddSwaggerGen(c =>
 
 // AutoMapper
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<NutriZeka.Application.Mappings.MappingProfile>());
+
 // --- 3. ADIM: JWT KÝMLÝK DOÐRULAMA (AUTHENTICATION) AYARLARI ---
+// Güvenlik Kontrolü: Gerçek þifre dosyada yoksa sistemi güvenli þekilde durdur.
+var jwtKey = builder.Configuration["JwtSettings:Key"];
+if (string.IsNullOrEmpty(jwtKey) || jwtKey == "BURASI_GIZLIDIR_GERCEK_SIFRE_YAZILMAMALIDIR")
+{
+    throw new InvalidOperationException("JWT Secret Key eksik veya varsayýlan deðerde býrakýlmýþ! appsettings.Development.json dosyanýzý kontrol edin.");
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            // "JwtSettings:Key" olarak güncelledik, appsettings ile ayný olmalý
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                builder.Configuration["JwtSettings:Key"] ?? "NutriZeka_Gida_Dedektifi_Cok_Gizli_Ve_Guvenli_Jwt_Sifreleme_Keyi_2026!")),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
 
             ValidateIssuer = true,
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"] ?? "NutriZekaAPI",
@@ -80,10 +86,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
             ValidateLifetime = true // Token süresi dolduðunda giriþi engeller
         };
-    });// --- 4. ADIM: DEPENDENCY INJECTION (Servis & Repo Eþleþmeleri) ---
+    });
+
+// --- 4. ADIM: DEPENDENCY INJECTION (Servis & Repo Eþleþmeleri) ---
 // * Yeni Eklenenler *
 builder.Services.AddScoped<ITokenService, TokenService>(); // Token Üretici
-builder.Services.AddScoped<IUserRepository, UserRepository>(); // User Repo (Eksikti, ekledim)
+builder.Services.AddScoped<IUserRepository, UserRepository>(); // User Repo
 builder.Services.AddScoped<IUserService, UserService>(); // User Servisi
 
 // * Mevcut Olanlar *
@@ -93,10 +101,12 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IScanHistoryRepository, ScanHistoryRepository>();
 builder.Services.AddScoped<IScanHistoryService, ScanHistoryService>();
 builder.Services.AddScoped<IAIAnalysisCacheRepository, AIAnalysisCacheRepository>();
+
 // Hem HttpClient fabrikasýný hem de Gemini servisini sisteme tanýtýyoruz
 builder.Services.AddHttpClient<IGenerativeAiService, GeminiService>();
 // Infrastructure/Services içindeki AIAnalysisService'i sisteme tanýtýyoruz
 builder.Services.AddScoped<IAIAnalysisService, AIAnalysisService>();
+
 // --- RESTORANIN ÝNÞAATI BÝTTÝ ---
 var app = builder.Build();
 
