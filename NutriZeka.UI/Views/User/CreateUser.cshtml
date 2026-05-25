@@ -1,0 +1,121 @@
+﻿@model NutriZeka.UI.Dtos.UserDtos.CreateUserDto
+@{
+    ViewData["Title"] = "Yeni Kullanıcı Kaydı";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4">
+        <span class="text-muted fw-light">Sistem / <a href="/User/Index" class="text-muted">Kullanıcılar</a> /</span> Kayıt Oluştur
+    </h4>
+
+    <div class="row">
+        <div class="col-xl">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center border-bottom mb-3">
+                    <h5 class="mb-0 text-primary">Yeni Kullanıcı Bilgileri</h5>
+                    <small class="text-muted float-end">Gıda Dedektifi Yönetim Paneli</small>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.ErrorMessage != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible shadow-sm border-start border-danger border-3" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="bx bx-error-alt me-2 fs-4"></i>
+                                <div>
+                                    <strong>Kayıt Başarısız!</strong><br />
+                                    @ViewBag.ErrorMessage
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <form asp-action="CreateUser" method="post" id="createUserForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="fullname">AD SOYAD</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="bx bx-user"></i></span>
+                                <input asp-for="FullName" type="text" class="form-control" id="fullname" placeholder="Örn: Süreyya Aydın" />
+                            </div>
+                            <span asp-validation-for="FullName" class="text-danger small fw-bold"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" for="email">E-POSTA</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="bx bx-envelope"></i></span>
+                                <input asp-for="Email" type="email" id="email" class="form-control" placeholder="sureyya@nutrizeka.com" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small fw-bold"></span>
+                        </div>
+
+                        <div class="mb-4 form-password-toggle">
+                            <label class="form-label fw-bold" for="password">ŞİFRE</label>
+                            <div class="input-group input-group-merge">
+                                <span class="input-group-text"><i class="bx bx-lock-alt"></i></span>
+                                <input asp-for="Password"
+                                       type="password"
+                                       id="password"
+                                       class="form-control"
+                                       placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" />
+                                <span class="input-group-text cursor-pointer" id="passwordToggleButton">
+                                    <i class="bx bx-hide" id="eyeIcon"></i>
+                                </span>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small fw-bold d-block mt-1"></span>
+
+                            <div class="mt-2 p-2 bg-light rounded border">
+                                <small class="text-muted d-block"><i class="bx bx-info-circle me-1"></i> <strong>Güvenlik Kuralları:</strong></small>
+                                <ul class="list-unstyled mb-0 mt-1 shadow-none" style="font-size: 11px;">
+                                    <li><i class="bx bx-check-circle text-success me-1"></i> En az 8 karakter</li>
+                                    <li><i class="bx bx-check-circle text-success me-1"></i> Bir büyük ve bir küçük harf</li>
+                                    <li><i class="bx bx-check-circle text-success me-1"></i> En az bir rakam</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bx bx-send me-1"></i> Kaydı Tamamla
+                            </button>
+                            <a href="/User/Index" class="btn btn-outline-secondary">İptal</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    @* Önce jQuery ana kütüphanesini ekliyoruz (Bu yoksa alttaki kodlar çalışmaz) *@
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    @* Sonra validasyon kütüphaneleri *@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.13/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            console.log("jQuery yüklendi ve hazır!"); // Konsoldan kontrol etmek için
+
+            // Şifre Göster/Gizle Butonu
+            $('#passwordToggleButton').on('click', function (e) {
+                e.preventDefault(); // Sayfanın yukarı zıplamasını engeller
+                
+                var passwordInput = $('#password');
+                var eyeIcon = $('#eyeIcon');
+
+                if (passwordInput.attr('type') === 'password') {
+                    passwordInput.attr('type', 'text');
+                    eyeIcon.removeClass('bx-hide').addClass('bx-show');
+                } else {
+                    passwordInput.attr('type', 'password');
+                    eyeIcon.removeClass('bx-show').addClass('bx-hide');
+                }
+            });
+        });
+    </script>
+}

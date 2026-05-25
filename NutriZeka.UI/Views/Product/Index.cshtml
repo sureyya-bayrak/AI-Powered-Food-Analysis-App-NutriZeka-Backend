@@ -1,0 +1,252 @@
+﻿@model List<NutriZeka.WebUI.Dtos.ProductDtos.ResultProductDto>
+@{
+    ViewData["Title"] = "Ürün Yönetimi";
+}
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">📦 Ürün Portföyü</h4>
+            <div class="d-flex gap-3">
+                <span class="badge bg-label-primary"><i class="bx bx-package me-1"></i> Toplam: @ViewBag.TotalCount Ürün</span>
+                <span class="badge bg-label-info"><i class="bx bx-category me-1"></i> @ViewBag.CategoryCount Aktif Kategori</span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#csvImportModal">
+                <i class="bx bx-upload me-1"></i> CSV İçe Aktar
+            </button>
+            <a asp-action="CreateProduct" class="btn btn-primary shadow">
+                <i class="bx bx-plus me-1"></i> Yeni Ürün Ekle
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <div class="input-group input-group-merge">
+                        <span class="input-group-text"><i class="bx bx-search"></i></span>
+                        <input type="text" id="customSearch" class="form-control" placeholder="Ürün adı, barkod veya marka ile anlık arama yapın...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select id="categoryFilter" class="form-select border-primary text-primary fw-bold">
+                        <option value="">📂 Tüm Kategorilerde Filtrele</option>
+                        @if (ViewBag.Categories != null)
+                        {
+                            foreach (var cat in (List<string>)ViewBag.Categories)
+                            {
+                                <option value="@cat" selected="@(ViewBag.SelectedCategory == cat ? "selected" : null)">@cat</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive text-nowrap p-3">
+            <table id="productsTable" class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 50px;">Görsel</th>
+                        <th>Ürün Bilgisi</th>
+                        <th class="text-center">Nutri</th>
+                        <th class="text-center">Nova</th>
+                        <th class="text-center">G</th>
+                        <th class="text-center">L</th>
+                        <th class="text-center">P</th>
+                        <th>Kategori</th>
+                        <th class="text-center">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/assets/img/elements/18.jpg" : item.ImageUrl)"
+                                     class="rounded-circle border p-1" width="45" height="45" style="object-fit: cover;">
+                            </td>
+                            <td>
+                                <span class="fw-bold d-block text-dark">@item.NameTr</span>
+                                <small class="text-muted">#@item.Barcode | @item.Brand</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-label-success fw-bolder" title="Nutri-Score">@item.NutriScoreGrade?.ToUpper()</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-label-info fw-bolder" title="Nova Group">N:@item.NovaGroup</span>
+                            </td>
+                            <td class="text-center">@(item.ContainsGluten ? Html.Raw("<i class='bx bxs-x-circle text-danger' title='Gluten Var'></i>") : Html.Raw("<i class='bx bxs-check-circle text-success' title='Glutensiz'></i>"))</td>
+                            <td class="text-center">@(item.ContainsLactose ? Html.Raw("<i class='bx bxs-x-circle text-danger' title='Laktoz Var'></i>") : Html.Raw("<i class='bx bxs-check-circle text-success' title='Laktozsuz'></i>"))</td>
+                            <td class="text-center">@(item.ContainsPalmOil ? Html.Raw("<i class='bx bxs-error text-warning' title='Palm Yağı Var'></i>") : Html.Raw("<i class='bx bxs-check-circle text-success' title='Palm Yağı Yok'></i>"))</td>
+                            <td><span class="badge bg-label-secondary">@item.CategoriesTr?.Split(',')[0]</span></td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-icon btn-label-primary" onclick='handleShowDetails(@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(item)))' title="Detaylar">
+                                        <i class="bx bx-show"></i>
+                                    </button>
+
+                                    <a href="/Product/UpdateProduct?barcode=@item.Barcode" class="btn btn-sm btn-icon btn-label-warning" title="Düzenle">
+                                        <i class="bx bx-edit"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-icon btn-label-danger" onclick="confirmProductDelete('@item.Barcode')" title="Sil">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="csvImportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form asp-action="ImportCsv" method="post" enctype="multipart/form-data">
+                <div class="modal-header bg-dark py-3">
+                    <h5 class="modal-title text-white"><i class="bx bx-upload me-2"></i> Toplu Ürün Yükleme</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3"><i class="bx bx-file bx-lg text-primary"></i></div>
+                    <p class="text-muted small">Barkod ve ürün verilerini içeren <strong>.csv</strong> dosyanızı seçin.</p>
+                    <input type="file" name="file" class="form-control" accept=".csv" required />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary shadow">Yüklemeyi Başlat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="productDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary py-3">
+                <h5 class="modal-title text-white"><i class="bx bx-detail me-2"></i> Ürün Analiz Kartı</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="nav-align-top">
+                    <ul class="nav nav-tabs nav-fill" role="tablist">
+                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-main">Genel Bilgiler</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-nutri">Besin Değerleri</button></li>
+                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ing">İçerik & Alerjen</button></li>
+                    </ul>
+                    <div class="tab-content border-0 shadow-none p-4">
+                        <div class="tab-pane fade show active" id="tab-main" role="tabpanel">
+                            <div class="row align-items-center g-4">
+                                <div class="col-md-5 text-center"><img id="m-img" src="" class="img-fluid rounded border shadow-sm" style="max-height: 250px;"></div>
+                                <div class="col-md-7">
+                                    <h4 id="m-name" class="fw-bold mb-1 text-primary"></h4>
+                                    <p id="m-brand" class="text-muted mb-3 fs-5"></p>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="bx bx-barcode me-2"></i><strong>Barkod:</strong> <span id="m-barcode"></span></li>
+                                        <li class="mb-2"><i class="bx bx-purchase-tag me-2"></i><strong>Miktar:</strong> <span id="m-qty"></span></li>
+                                        <li class="mb-2"><i class="bx bx-category me-2"></i><strong>Kategori:</strong> <span id="m-cat" class="text-wrap"></span></li>
+                                    </ul>
+                                    <div class="d-flex gap-2 mt-4 text-center">
+                                        <div class="flex-grow-1 p-2 bg-label-success rounded"><strong>Nutri</strong><h5 id="m-nutri" class="mb-0"></h5></div>
+                                        <div class="flex-grow-1 p-2 bg-label-info rounded"><strong>Nova</strong><h5 id="m-nova" class="mb-0"></h5></div>
+                                        <div class="flex-grow-1 p-2 bg-label-warning rounded"><strong>Eco</strong><h5 id="m-eco" class="mb-0"></h5></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-nutri" role="tabpanel">
+                            <table class="table table-bordered table-striped align-middle">
+                                <thead class="table-dark"><tr><th>Bileşen (100g/ml)</th><th>Miktar</th></tr></thead>
+                                <tbody>
+                                    <tr><td>⚡ Enerji</td><td id="m-kcal" class="fw-bold"></td></tr>
+                                    <tr><td>💧 Yağ</td><td id="m-fat"></td></tr>
+                                    <tr><td>🍞 Karbonhidrat</td><td id="m-carb"></td></tr>
+                                    <tr><td>🍭 Şeker</td><td id="m-sugar" class="text-danger fw-bold"></td></tr>
+                                    <tr><td>💪 Protein</td><td id="m-prot"></td></tr>
+                                    <tr><td>🧂 Tuz</td><td id="m-salt"></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-pane fade" id="tab-ing" role="tabpanel">
+                            <div class="mb-3"><h6>📝 İçindekiler (TR)</h6><p id="m-ing" class="p-3 bg-light rounded text-muted small"></p></div>
+                            <div><h6>⚠️ Alerjen Bilgisi</h6><p id="m-all" class="p-3 bg-label-danger rounded fw-bold"></p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-body text-center p-4">
+                <i class="bx bx-error-alt text-danger bx-lg mb-3"></i>
+                <h5 class="fw-bold">Emin misiniz?</h5>
+                <p class="text-muted small">Bu ürün NutriZeka veritabanından kalıcı olarak silinecektir.</p>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="button" id="finalDeleteBtn" class="btn btn-danger btn-sm shadow">Evet, Sil</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var table = $('#productsTable').DataTable({
+                "pageLength": 20,
+                "dom": '<"row"<"col-sm-12"tr>><"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/tr.json" }
+            });
+            $('#customSearch').on('keyup', function () { table.search(this.value).draw(); });
+            $('#categoryFilter').on('change', function () { table.column(7).search(this.value).draw(); });
+        });
+
+        function confirmProductDelete(barcode) {
+            $('#confirmDeleteModal').modal('show');
+            $('#finalDeleteBtn').off('click').on('click', function () {
+                window.location.href = '/Product/DeleteProduct?barcode=' + barcode;
+            });
+        }
+
+        function handleShowDetails(item) {
+            $('#m-img').attr('src', item.ImageUrl || '/assets/img/elements/18.jpg');
+            $('#m-name').text(item.NameTr);
+            $('#m-brand').text(item.Brand);
+            $('#m-barcode').text(item.Barcode);
+            $('#m-qty').text(item.Quantity || 'Belirtilmemiş');
+            $('#m-cat').text(item.CategoriesTr);
+            $('#m-nutri').text(item.NutriScoreGrade?.toUpperCase() || '-');
+            $('#m-nova').text(item.NovaGroup || '-');
+            $('#m-eco').text(item.EcoScoreGrade?.toUpperCase() || '-');
+            $('#m-kcal').text(item.EnergyKcal + ' kcal');
+            $('#m-fat').text(item.Fat + ' g');
+            $('#m-carb').text(item.Carbohydrates + ' g');
+            $('#m-sugar').text(item.Sugars + ' g');
+            $('#m-prot').text(item.Proteins + ' g');
+            $('#m-salt').text(item.Salt + ' g');
+            $('#m-ing').text(item.IngredientsTextTr || 'Veri bulunamadı.');
+            $('#m-all').text(item.AllergensTr || 'Alerjen bilgisi yok.');
+
+            $('#productDetailModal').modal('show');
+        }
+    </script>
+}

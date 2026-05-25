@@ -1,0 +1,187 @@
+﻿@model List<NutriZeka.UI.Dtos.HistoryDtos.ScanHistoryDto>
+@{
+    ViewData["Title"] = "Tarama Geçmişi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold py-3 mb-0">
+            <span class="text-muted fw-light">Sistem /</span>
+            @(ViewBag.SelectedUserId != null ? "Kullanıcıya Özel Geçmiş" : "Tüm Tarama Geçmişi")
+        </h4>
+
+        @if (ViewBag.SelectedUserId != null && Model.Any())
+        {
+            <button type="button" class="btn btn-outline-danger" onclick="openDeleteModal('@ViewBag.SelectedUserId')">
+                <i class="bx bx-trash me-1"></i> Tüm Geçmişi Temizle
+            </button>
+        }
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center border-bottom mb-2">
+            <h5 class="mb-0 text-primary">Gıda Analiz Arşivi</h5>
+            <span class="badge bg-label-secondary">@Model.Count Kayıt Bulundu</span>
+        </div>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Ürün & Marka</th>
+                        <th class="text-center">Barkod</th>
+                        <th class="text-center">Kullanıcı ID</th>
+                        <th class="text-center">Besin/İşlem Skoru</th>
+                        <th class="text-center">Risk Analizi</th>
+                        <th class="text-center">Tarih</th>
+                        <th class="text-center">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bx bx-info-circle fs-3 d-block mb-2"></i>
+                                Henüz bir tarama kaydı bulunamadı.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar avatar-md me-3 bg-white border rounded">
+                                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/assets/img/elements/18.jpg" : item.ImageUrl)"
+                                             alt="product" style="object-fit: contain;" />
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">@item.ProductName</div>
+                                        <small class="text-muted">@item.Brand</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="fw-medium text-dark">
+                                    <i class="bx bx-barcode-reader text-muted me-1"></i>
+                                    @(string.IsNullOrEmpty(item.Barcode) ? "Bilinmiyor" : item.Barcode)
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="/History/UserHistory?id=@item.UserId" class="badge bg-label-primary text-body" title="@item.UserId">
+                                    <i class="bx bx-user me-1"></i> @item.UserId.ToString().Substring(0, 8)...
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                @{
+                                    var grade = item.NutriScoreGrade?.ToLower();
+                                    var gradeColor = grade switch { "a" => "success", "b" => "info", "c" => "warning", "d" => "danger", "e" => "danger", _ => "secondary" };
+                                }
+                                <div class="d-flex flex-column align-items-center gap-1">
+                                    <span class="badge bg-label-@gradeColor fw-bold" style="min-width: 65px;">N-@item.NutriScoreGrade?.ToUpper()</span>
+                                    <span class="badge bg-label-secondary rounded-pill" style="font-size: 10px;">Nova: @item.NovaGroup</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex flex-column gap-1 align-items-center">
+                                    @if (item.ContainsPalmOil)
+                                    {
+                                        <span class="badge bg-label-danger" style="width: 95px;">PALM YAĞI</span>
+                                    }
+                                    @if (item.ContainsGluten)
+                                    {
+                                        <span class="badge bg-label-warning" style="width: 95px;">GLUTEN</span>
+                                    }
+                                    @if (item.ContainsLactose)
+                                    {
+                                        <span class="badge bg-label-info" style="width: 95px;">LAKTOZ</span>
+                                    }
+                                    @if (!item.ContainsPalmOil && !item.ContainsGluten && !item.ContainsLactose)
+                                    {
+                                        <span class="badge bg-label-success" style="width: 95px;">TEMİZ</span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="text-dark fw-medium">@item.CreatedDate.ToString("dd.MM.yyyy")</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">@item.CreatedDate.ToString("HH:mm")</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="dropdown">
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                                        <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="javascript:void(0);" onclick="navigator.clipboard.writeText('@(item.Barcode ?? item.ProductId.ToString())')">
+                                            <i class="bx bx-copy me-1"></i> Barkodu Kopyala
+                                        </a>
+                                        <a class="dropdown-item" href="/History/UserHistory?id=@item.UserId">
+                                            <i class="bx bx-filter-alt me-1"></i> Sadece Bu Kullanıcı
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item text-danger" href="javascript:void(0);">
+                                            <i class="bx bx-shield-x me-1"></i> Analizi İncele
+                                        </a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle"><i class="bx bx-error text-warning me-2"></i>Dikkat! Kalıcı Silme İşlemi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <p class="fs-6">
+                            Bu kullanıcıya ait <strong>tüm gıda tarama arşivi</strong> sistemden kalıcı olarak silinecektir. <br /><br />
+                            Bu işlem geri alınamaz. Onaylıyor musunuz?
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal Et</button>
+                <a href="/History/DeleteHistory?userId=@ViewBag.SelectedUserId" class="btn btn-danger">Evet, Kalıcı Olarak Sil</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <i class="bx bx-info-circle display-3 text-warning mb-3"></i>
+                <h4 class="mb-2">Emin misiniz?</h4>
+                <p class="text-muted">Bu kullanıcının <span class="fw-bold">tüm tarama arşivi</span> kalıcı olarak silinecektir.</p>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">İptal</button>
+                    <a id="confirmDeleteBtn" href="#" class="btn btn-danger">Evet, Sil</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function openDeleteModal(userId) {
+            // Silme linkini, Controller'daki metoda gidecek şekilde ayarlıyoruz
+            document.getElementById('confirmDeleteBtn').href = '/History/DeleteHistory?userId=' + userId;
+
+            // Modal'ı ekranda gösteriyoruz
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        }
+    </script>
+}

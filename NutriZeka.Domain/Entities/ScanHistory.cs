@@ -23,5 +23,12 @@ namespace NutriZeka.Domain.Entities
 
         // Yapay zekanın o tarama anında ürettiği özel yorum
         public string? AIAnalysisSummary { get; set; }
+
+        // --- FİLTRELEME İÇİN EKLENDİ ---
+        // Ürünün arama ekranından mı (search) yoksa tarama ekranından mı (scan) eklendiğini tutar
+        public string Source { get; set; } = string.Empty;
+
+        // 🚀 YENİ EKLENEN İLİŞKİ: Bu tarama işlemine ait AI analizleri
+        public virtual ICollection<AIAnalysisCache> AIAnalyses { get; set; } = new List<AIAnalysisCache>();
     }
 }

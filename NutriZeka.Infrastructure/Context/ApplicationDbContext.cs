@@ -16,6 +16,9 @@ namespace NutriZeka.Infrastructure.Context
         public DbSet<User> Users { get; set; }
         public DbSet<ScanHistory> ScanHistories { get; set; }
 
+        // 🚀 YENİ EKLENEN: AI Analiz Önbellek Tablosu
+        public DbSet<AIAnalysisCache> AIAnalysisCaches { get; set; }
+
         // --- Kuralların (Fluent API) Yazıldığı Yer ---
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +40,27 @@ namespace NutriZeka.Infrastructure.Context
                 .HasOne(s => s.Product)
                 .WithMany() // Ürün üzerinden geçmişe gitmeyeceğimiz için burayı boş bırakıyoruz
                 .HasForeignKey(s => s.ProductId);
+            // 🚀 3. YENİ KURAL: AIAnalysisCache Tablosunun İlişkileri ve Silinme Kuralları
+            modelBuilder.Entity<AIAnalysisCache>(entity =>
+            {
+                // User ile ilişkisi - DÖNGÜYÜ KIRMAK İÇİN NOACTION
+                entity.HasOne(a => a.User)
+                      .WithMany()
+                      .HasForeignKey(a => a.UserId)
+                      .OnDelete(DeleteBehavior.NoAction); // 🚀 DÜZELTİLDİ
+
+                // Product ile ilişkisi - DÖNGÜYÜ KIRMAK İÇİN NOACTION
+                entity.HasOne(a => a.Product)
+                      .WithMany()
+                      .HasForeignKey(a => a.ProductId)
+                      .OnDelete(DeleteBehavior.NoAction); // 🚀 DÜZELTİLDİ
+
+                // Sadece ScanHistory ile ilişkisinde Cascade kalsın. (Tarama geçmişi silinirse analiz gitsin)
+                entity.HasOne(a => a.ScanHistory)
+                      .WithMany(sh => sh.AIAnalyses)
+                      .HasForeignKey(a => a.ScanHistoryId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

@@ -22,6 +22,51 @@ namespace NutriZeka.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("NutriZeka.Domain.Entities.AIAnalysisCache", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AIResponse")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("QuestionType")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ScanHistoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("UserWasGlutenFree")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("UserWasLactoseFree")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("UserWasPalmOilFree")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ScanHistoryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AIAnalysisCaches");
+                });
+
             modelBuilder.Entity("NutriZeka.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -47,9 +92,22 @@ namespace NutriZeka.Infrastructure.Migrations
                     b.Property<double>("Carbohydrates")
                         .HasColumnType("float");
 
-                    b.Property<string>("Categories")
+                    b.Property<string>("CategoriesEn")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CategoriesTr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ContainsGluten")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ContainsLactose")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ContainsPalmOil")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -136,6 +194,10 @@ namespace NutriZeka.Infrastructure.Migrations
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -157,12 +219,14 @@ namespace NutriZeka.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("DailyAiRequestCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("Is2FAEnabled")
@@ -180,24 +244,52 @@ namespace NutriZeka.Infrastructure.Migrations
                     b.Property<bool>("IsPalmOilFree")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime>("LastAiRequestDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ProfileCompletionRate")
                         .HasColumnType("int");
 
                     b.Property<string>("ProfileImageUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("NutriZeka.Domain.Entities.AIAnalysisCache", b =>
+                {
+                    b.HasOne("NutriZeka.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("NutriZeka.Domain.Entities.ScanHistory", "ScanHistory")
+                        .WithMany("AIAnalyses")
+                        .HasForeignKey("ScanHistoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NutriZeka.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ScanHistory");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("NutriZeka.Domain.Entities.ScanHistory", b =>
@@ -217,6 +309,11 @@ namespace NutriZeka.Infrastructure.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NutriZeka.Domain.Entities.ScanHistory", b =>
+                {
+                    b.Navigation("AIAnalyses");
                 });
 
             modelBuilder.Entity("NutriZeka.Domain.Entities.User", b =>

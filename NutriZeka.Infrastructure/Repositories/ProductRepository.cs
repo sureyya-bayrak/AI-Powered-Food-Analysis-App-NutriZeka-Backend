@@ -26,19 +26,30 @@ namespace NutriZeka.Infrastructure.Repositories
             return await _context.Products.FirstOrDefaultAsync(p => p.Barcode == barcode);
         }
 
-        // 2. Senin harika UX tespitin: Hem isim hem de barkod başlangıcına göre canlı arama! (Liste döner)
-        // Senin harika UX tespitin: Hem Türkçe isim, hem İngilizce isim, hem Marka hem de barkod başlangıcına göre devasa canlı arama!
-        public async Task<IEnumerable<Product>> SearchAsync(string searchTerm)
+        public async Task<IEnumerable<Product>> SearchAsync(string searchTerm, string language)
         {
-            return await _context.Products
-                .Where(p =>
-                       p.NameTr.Contains(searchTerm) ||
-                       p.NameEn.Contains(searchTerm) ||
-                       p.Brand.Contains(searchTerm) ||
-                       p.Barcode.StartsWith(searchTerm))
-                .ToListAsync();
-        }
+            var term = searchTerm.Trim().ToLower();
+            var query = _context.Products.AsQueryable();
 
+            if (language.StartsWith("en"))
+            {
+                // İNGİLİZCE: Sadece NameEn ve Barcode'da ara
+                query = query.Where(p =>
+                    (p.NameEn != null && p.NameEn.ToLower().Contains(term)) ||
+                    (p.Barcode != null && p.Barcode.Contains(term)) // Barcode küçük/büyük harf önemsiz
+                );
+            }
+            else
+            {
+                // TÜRKÇE: Sadece NameTr ve Barcode'da ara
+                query = query.Where(p =>
+                    (p.NameTr != null && p.NameTr.ToLower().Contains(term)) ||
+                    (p.Barcode != null && p.Barcode.Contains(term))
+                );
+            }
+
+            return await query.Take(50).ToListAsync(); // İlk 50 sonuç
+        }
         // 3. Admin listelemeleri veya genel sorgular için tüm ürünler
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
@@ -68,6 +79,17 @@ namespace NutriZeka.Infrastructure.Repositories
                 _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
             }
+        }
+        // --- YENİ EKLENEN KISIM: ID'ye göre ürün getirme (AI Servisi için gerekli) ---
+        public async Task<Product?> GetByIdAsync(Guid id)
+        {
+            return await _context.Products.FindAsync(id);
+        }
+        // --- YENİ EKLENEN KISIM ---
+        // Servisin filtreleme yapabilmesi için IQueryable dönüyoruz
+        public IQueryable<Product> GetQueryable()
+        {
+            return _context.Products.AsQueryable();
         }
     }
 }

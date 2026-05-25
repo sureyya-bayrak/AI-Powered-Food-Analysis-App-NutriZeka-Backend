@@ -11,7 +11,10 @@ namespace NutriZeka.Domain.Entities
         public string Brand { get; set; }
         public string Quantity { get; set; }
         public string ImageUrl { get; set; }
-        public string Categories { get; set; }
+
+        // --- Kategoriler (Öneri sistemi için çift dilli hale getirdik) ---
+        public string CategoriesTr { get; set; }
+        public string CategoriesEn { get; set; }
 
         public bool IsVerified { get; set; }
 
@@ -20,23 +23,25 @@ namespace NutriZeka.Domain.Entities
         public string EcoScoreGrade { get; set; }
         public int NovaGroup { get; set; }
 
-        // --- Metin Alanları (Senin istediğin dinamik yapı) ---
+        // --- İçindekiler ---
         public string IngredientsTextTr { get; set; }
         public string IngredientsTextEn { get; set; }
 
-        // Alerjenleri burada virgülle ayrılmış "Süt, Yer Fıstığı, Gluten" gibi tutacağız
+        // --- Alerjenler (Virgülle ayrılmış metin) ---
         public string AllergensTr { get; set; }
         public string AllergensEn { get; set; }
 
-        // --- Temel Besin Değerleri (Dashboard grafikleri için) ---
+        // --- Sağlık ve Diyet Filtreleri (Mobil tarafta hızlı sorgu için) ---
+        public bool ContainsGluten { get; set; }
+        public bool ContainsLactose { get; set; }
+        public bool ContainsPalmOil { get; set; }
+
+        // --- Temel Besin Değerleri ---
         public double EnergyKcal { get; set; }
         public double Fat { get; set; }
         public double Carbohydrates { get; set; }
         public double Sugars { get; set; }
         public double Proteins { get; set; }
         public double Salt { get; set; }
-
-        // --- İlişkiler ---
-    
     }
 }

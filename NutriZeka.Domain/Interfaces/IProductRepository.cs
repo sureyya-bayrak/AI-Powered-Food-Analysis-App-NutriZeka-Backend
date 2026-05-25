@@ -1,6 +1,7 @@
 ﻿using NutriZeka.Domain.Entities;
 using System;
 using System.Collections.Generic;
+using System.Linq; // IQueryable için bu kütüphane eklendi
 using System.Threading.Tasks;
 
 namespace NutriZeka.Domain.Interfaces
@@ -11,7 +12,8 @@ namespace NutriZeka.Domain.Interfaces
         Task<Product?> GetByBarcodeAsync(string barcode);
 
         // 2. Arama çubuğu için: Hem isme göre hem de barkodun "başlangıcına" göre liste getirir
-        Task<IEnumerable<Product>> SearchAsync(string searchTerm);
+        // Bu satırı interface içinde güncellemelisin
+        Task<IEnumerable<Product>> SearchAsync(string searchTerm, string language);
 
         // 3. Admin ve diğer listelemeler için
         Task<IEnumerable<Product>> GetAllAsync();
@@ -20,5 +22,11 @@ namespace NutriZeka.Domain.Interfaces
         Task AddAsync(Product product);
         Task UpdateAsync(Product product);
         Task DeleteAsync(Guid id);
+
+        // ID'ye göre tek bir ürün getirir
+        Task<Product?> GetByIdAsync(Guid id);
+        // --- YENİ EKLENEN SATIR ---
+        // Servis katmanının veritabanını bilmeden karmaşık filtrelemeler yapabilmesini sağlar
+        IQueryable<Product> GetQueryable();
     }
 }

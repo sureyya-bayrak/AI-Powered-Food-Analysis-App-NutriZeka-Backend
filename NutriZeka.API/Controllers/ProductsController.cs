@@ -1,9 +1,14 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using NutriZeka.Application.DTOs;
+using NutriZeka.Application.Interfaces;
 using NutriZeka.Domain.Entities;
-using NutriZeka.Infrastructure.Context;
+using NutriZeka.Domain.Interfaces; // Repository arayüzü için
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NutriZeka.API.Controllers
 {
@@ -11,124 +16,144 @@ namespace NutriZeka.API.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        // ARTIK DbContext YOK! Sadece Interface'ler var.
         private readonly IMapper _mapper;
+        private readonly IProductImportService _importService;
+        private readonly IProductService _productService;
+        private readonly IProductRepository _productRepository;
 
-        public ProductsController(ApplicationDbContext context, IMapper mapper)
+        public ProductsController(
+            IMapper mapper,
+            IProductImportService importService,
+            IProductService productService,
+            IProductRepository productRepository)
         {
-            _context = context;
             _mapper = mapper;
+            _importService = importService;
+            _productService = productService;
+            _productRepository = productRepository;
         }
 
-        // --- MOBİL TARAYICI İÇİN KRİTİK METOT ---
-        // Flutter'daki mobile_scanner barkodu okuyunca bu adresi çağıracak:
-        // Örn: GET /api/products/barcode/8690767673887
-        [HttpGet("barcode/{barcode}")]
-        public async Task<ActionResult<ProductDetailDto>> GetProductByBarcode(string barcode)
+        // --- YARDIMCI METOT: Dili Ayarla ---
+        private void MapDisplayFields(ProductDetailDto dto, string language)
         {
-            var product = await _context.Products
-                .FirstOrDefaultAsync(p => p.Barcode == barcode);
-
-            if (product == null)
-            {
-                return NotFound(new { message = "Ürün bulunamadı, lütfen yeni ürün ekleyin." });
-            }
-
-            // Entity'yi tasarıma uygun DTO'ya çeviriyoruz
-            var productDto = _mapper.Map<ProductDetailDto>(product);
-
-            return Ok(productDto);
+            bool isEnglish = language.StartsWith("en");
+            dto.DisplayName = isEnglish && !string.IsNullOrEmpty(dto.NameEn) ? dto.NameEn : dto.NameTr;
+            dto.DisplayIngredients = isEnglish && !string.IsNullOrEmpty(dto.IngredientsTextEn) ? dto.IngredientsTextEn : dto.IngredientsTextTr;
+            dto.DisplayAllergens = isEnglish && !string.IsNullOrEmpty(dto.AllergensEn) ? dto.AllergensEn : dto.AllergensTr;
+            dto.DisplayCategory = isEnglish && !string.IsNullOrEmpty(dto.CategoriesEn) ? dto.CategoriesEn : dto.CategoriesTr;
         }
 
-        // --- TEMEL CRUD İŞLEMLERİ ---
-
-        // 1. Tüm Ürünleri Getir
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductDetailDto>>> GetProducts()
+        [HttpGet("alternatives/{barcode}")]
+        public async Task<ActionResult<IEnumerable<ProductDetailDto>>> GetAlternatives(string barcode)
         {
-            var products = await _context.Products.ToListAsync();
-            var dtos = _mapper.Map<IEnumerable<ProductDetailDto>>(products);
+            var language = Request.Headers["Accept-Language"].ToString().ToLower();
+            var alternatives = await _productService.GetBetterAlternativesAsync(barcode);
+
+            if (alternatives == null || !alternatives.Any())
+                return NotFound(new { message = "Bu ürün için daha iyi bir alternatif bulunamadı." });
+
+            var dtos = _mapper.Map<IEnumerable<ProductDetailDto>>(alternatives);
+            foreach (var dto in dtos) MapDisplayFields(dto, language);
+
             return Ok(dtos);
         }
 
-        // 2. ID ile Ürün Getir
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ProductDetailDto>> GetProduct(Guid id)
+        [HttpGet("barcode/{barcode}")]
+        public async Task<ActionResult<ProductDetailDto>> GetProductByBarcode(string barcode)
         {
-            var product = await _context.Products.FindAsync(id);
+            var language = Request.Headers["Accept-Language"].ToString().ToLower();
+            // DbContext yerine Repository kullanıyoruz
+            var product = await _productRepository.GetByBarcodeAsync(barcode);
 
-            if (product == null) return NotFound();
+            if (product == null) return NotFound(new { message = "Ürün bulunamadı." });
 
-            return Ok(_mapper.Map<ProductDetailDto>(product));
+            var dto = _mapper.Map<ProductDetailDto>(product);
+            MapDisplayFields(dto, language);
+            return Ok(dto);
+        }
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<ProductDetailDto>>> SearchProducts([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return BadRequest(new { message = "Arama terimi boş olamaz." });
+
+            // 1. Dil bilgisini al ve standardize et
+            var language = Request.Headers["Accept-Language"].ToString().ToLower();
+
+            // Sadece "en" veya "tr" kısmına bakmak daha güvenlidir (en-US, en-GB vb. için)
+            if (string.IsNullOrEmpty(language)) language = "tr-tr";
+
+            // 2. Repository'ye dili gönderiyoruz (Repository içinde filtreleme yapılacak)
+            var products = await _productRepository.SearchAsync(query, language);
+
+            if (products == null || !products.Any())
+                return NotFound(new { message = "Ürün bulunamadı." });
+
+            // 3. Mapleme işlemi
+            var dtos = _mapper.Map<IEnumerable<ProductDetailDto>>(products);
+
+            // 4. Mapping sonrası UI alanlarını (ProductName vb.) dile göre dolduruyoruz
+            foreach (var dto in dtos)
+            {
+                MapDisplayFields(dto, language);
+            }
+
+            return Ok(dtos);
         }
 
-        // 3. Yeni Ürün Ekle (Admin veya Manuel Giriş İçin)
-        [HttpPost]
-        public async Task<ActionResult<ProductDetailDto>> PostProduct(Product product)
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ProductDetailDto>>> GetProducts()
         {
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
+            var language = Request.Headers["Accept-Language"].ToString().ToLower();
+            var products = await _productRepository.GetAllAsync();
+
+            var dtos = _mapper.Map<IEnumerable<ProductDetailDto>>(products);
+            foreach (var dto in dtos) MapDisplayFields(dto, language);
+
+            return Ok(dtos);
+        }
+
+        [HttpPost("import-csv")]
+        public async Task<IActionResult> ImportProductsFromCsv(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "Lütfen geçerli bir CSV dosyası yükleyin." });
+
+            using var stream = file.OpenReadStream();
+            var result = await _importService.ImportFromCsvAsync(stream);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<ProductDetailDto>> PostProduct([FromBody] ProductCreateDto productCreateDto)
+        {
+            var product = _mapper.Map<Product>(productCreateDto);
+            await _productRepository.AddAsync(product);
 
             var productDto = _mapper.Map<ProductDetailDto>(product);
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, productDto);
+            return CreatedAtAction(nameof(GetProductByBarcode), new { barcode = product.Barcode }, productDto);
         }
 
-        // PUT: api/Products/barcode/8690767673887
         [HttpPut("barcode/{barcode}")]
-        public async Task<IActionResult> PutProductByBarcode(string barcode, [FromBody] Product product)
+        public async Task<IActionResult> PutProductByBarcode(string barcode, [FromBody] ProductUpdateDto productUpdateDto)
         {
-            // 1. Veritabanında o barkoda sahip asıl ürünü buluyoruz
-            var existingProduct = await _context.Products
-                .FirstOrDefaultAsync(p => p.Barcode == barcode);
+            var existingProduct = await _productRepository.GetByBarcodeAsync(barcode);
+            if (existingProduct == null) return NotFound(new { message = "Güncellenecek ürün bulunamadı." });
 
-            if (existingProduct == null)
-            {
-                return NotFound(new { message = "Güncellenecek ürün bulunamadı." });
-            }
-
-            // 2. Gelen verileri mevcut ürünün üzerine yazıyoruz
-            // (Burada ID'yi değiştirmiyoruz, sadece içeriği güncelliyoruz)
-            existingProduct.NameTr = product.NameTr;
-            existingProduct.NameEn = product.NameEn;
-            existingProduct.Brand = product.Brand;
-            existingProduct.Quantity = product.Quantity;
-            existingProduct.NutriScoreGrade = product.NutriScoreGrade;
-            existingProduct.NovaGroup = product.NovaGroup;
-            existingProduct.EnergyKcal = product.EnergyKcal;
-            existingProduct.Fat = product.Fat;
-            existingProduct.Sugars = product.Sugars;
-            existingProduct.IngredientsTextTr = product.IngredientsTextTr;
-            existingProduct.AllergensTr = product.AllergensTr;
-            existingProduct.Categories = product.Categories;
-            existingProduct.IsVerified = product.IsVerified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw;
-            }
+            _mapper.Map(productUpdateDto, existingProduct);
+            await _productRepository.UpdateAsync(existingProduct);
 
             return Ok(new { message = "Ürün başarıyla güncellendi." });
         }
 
-        // DELETE: api/Products/barcode/8690767673887
         [HttpDelete("barcode/{barcode}")]
         public async Task<IActionResult> DeleteProductByBarcode(string barcode)
         {
-            var product = await _context.Products
-                .FirstOrDefaultAsync(p => p.Barcode == barcode);
+            var product = await _productRepository.GetByBarcodeAsync(barcode);
+            if (product == null) return NotFound(new { message = "Silinecek ürün bulunamadı." });
 
-            if (product == null)
-            {
-                return NotFound(new { message = "Silinecek ürün bulunamadı." });
-            }
-
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
-
+            await _productRepository.DeleteAsync(product.Id);
             return Ok(new { message = "Ürün başarıyla silindi." });
         }
     }
