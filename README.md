@@ -39,3 +39,23 @@ The project is built with a focus on clean code, scalability, and security, util
 
 ### Description (Warning)
 This  readme file will update ( I will add project screenshots.]
+
+### Screenshots
+<p align="center">
+  <table align="center">
+    <tr>
+      <td align="center" width="30%">
+        <img src="YOL_VEYA_LINK/ekran1.png" width="100%" alt="Gıda Barkodunu Tarayın"/>
+        <br/><sub><b>Şekil 1 - Onboarding</b></sub>
+      </td>
+      <td align="center" width="30%">
+        <img src="YOL_VEYA_LINK/ekran2.png" width="100%" alt="Sağlık Profilinizi Özelleştirin"/>
+        <br/><sub><b>Şekil 2 - Onboarding</b></sub>
+      </td>
+      <td align="center" width="30%">
+        <img src="YOL_VEYA_LINK/ekran3.png" width="100%" alt="Paketli Gıdayı Analiz Edin"/>
+        <br/><sub><b>Şekil 3 - Onboarding</b></sub>
+      </td>
+    </tr>
+  </table>
+</p>
