@@ -41,22 +41,4 @@ The project is built with a focus on clean code, scalability, and security, util
 ### Description (Warning)
 This  readme file will update ( I will add project screenshots.]
 
-### Screenshots
-<p align="center">
-  <table align="center">
-    <tr>
-      <td align="center" width="30%">
-        <img src="https://github.com/user-attachments/assets/6226a949-73e3-4741-a25b-9892e2a51b93" width="100%" alt="Onboarding1new"/>
-        <br/><sub><b>1. Barkod Tarama</b></sub>
-      </td>
-      <td align="center" width="30%">
-        <img src="https://github.com/user-attachments/assets/6dabd3c9-f4a6-4d1e-a6c4-000d6a679690" width="100%" alt="Onboarding2new"/>
-        <br/><sub><b>2. Profil Özelleştirme</b></sub>
-      </td>
-      <td align="center" width="30%">
-        <img src="https://github.com/user-attachments/assets/2a6bf9ee-1dfc-4369-91ec-24482030a731" width="100%" alt="Onboarding3new"/>
-        <br/><sub><b>3. Gıda Analizi</b></sub>
-      </td>
-    </tr>
-  </table>
-</p>
+
