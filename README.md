@@ -46,17 +46,16 @@ This  readme file will update ( I will add project screenshots.]
   <table align="center">
     <tr>
       <td align="center" width="30%">
-       <img width="957" height="2048" alt="Onboarding1new" src="https://github.com/user-attachments/assets/0abe0f66-aedf-423b-aaeb-d69029045904" />
-        <br/><sub><b>Şekil 1 - Onboarding</b></sub>
+        <img src="https://github.com/user-attachments/assets/6226a949-73e3-4741-a25b-9892e2a51b93" width="100%" alt="Onboarding1new"/>
+        <br/><sub><b>1. Barkod Tarama</b></sub>
       </td>
       <td align="center" width="30%">
-        <img width="957" height="2048" alt="Onboarding2new" src="https://github.com/user-attachments/assets/759cd829-6df2-424d-8d06-4f5d5b7b3ab1" />
-
-        <br/><sub><b>Şekil 2 - Onboarding</b></sub>
+        <img src="https://github.com/user-attachments/assets/6dabd3c9-f4a6-4d1e-a6c4-000d6a679690" width="100%" alt="Onboarding2new"/>
+        <br/><sub><b>2. Profil Özelleştirme</b></sub>
       </td>
       <td align="center" width="30%">
-      <img width="957" height="2048" alt="Onboarding3new" src="https://github.com/user-attachments/assets/111af490-f1d6-41dc-bf82-1401df519220" />
-      <br/><sub><b>Şekil 3 - Onboarding</b></sub>
+        <img src="https://github.com/user-attachments/assets/2a6bf9ee-1dfc-4369-91ec-24482030a731" width="100%" alt="Onboarding3new"/>
+        <br/><sub><b>3. Gıda Analizi</b></sub>
       </td>
     </tr>
   </table>
