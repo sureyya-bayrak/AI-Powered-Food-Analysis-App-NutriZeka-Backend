@@ -1,3 +1,4 @@
+
 # NutriZeka - AI-Powered Mobile Food Analysis Platform
 
 ## 🚀 Overview
@@ -45,16 +46,17 @@ This  readme file will update ( I will add project screenshots.]
   <table align="center">
     <tr>
       <td align="center" width="30%">
-        <img src="YOL_VEYA_LINK/ekran1.png" width="100%" alt="Gıda Barkodunu Tarayın"/>
+       <img width="957" height="2048" alt="Onboarding1new" src="https://github.com/user-attachments/assets/0abe0f66-aedf-423b-aaeb-d69029045904" />
         <br/><sub><b>Şekil 1 - Onboarding</b></sub>
       </td>
       <td align="center" width="30%">
-        <img src="YOL_VEYA_LINK/ekran2.png" width="100%" alt="Sağlık Profilinizi Özelleştirin"/>
+        <img width="957" height="2048" alt="Onboarding2new" src="https://github.com/user-attachments/assets/759cd829-6df2-424d-8d06-4f5d5b7b3ab1" />
+
         <br/><sub><b>Şekil 2 - Onboarding</b></sub>
       </td>
       <td align="center" width="30%">
-        <img src="YOL_VEYA_LINK/ekran3.png" width="100%" alt="Paketli Gıdayı Analiz Edin"/>
-        <br/><sub><b>Şekil 3 - Onboarding</b></sub>
+      <img width="957" height="2048" alt="Onboarding3new" src="https://github.com/user-attachments/assets/111af490-f1d6-41dc-bf82-1401df519220" />
+      <br/><sub><b>Şekil 3 - Onboarding</b></sub>
       </td>
     </tr>
   </table>
