@@ -42,3 +42,37 @@ The project is built with a focus on clean code, scalability, and security, util
 This  readme file will update ( I will add project screenshots.]
 
 
+### 📱 Screenshots
+
+#### 🔹 1. Onboarding Flow
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/46fc9798-b371-482a-a5f6-f02b35f0b66e" height="800" alt="Onboarding Flow"/>
+</p>
+
+#### 🔹 2. Authentication Flow
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/6bd3cb3d-82dc-4766-a4a5-2c89d62542f1" height="800" alt="Authentication Flow"/>
+</p>
+
+#### 🔹 3. Barcode Scanning Interface
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2053bc72-906f-47db-97a1-0417b9a05c98" height="800" alt="Barcode Scanning"/>
+</p>
+
+#### 🔹 4. Main Dashboard & User Profile
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/44790dec-302c-4735-bbc9-7b3678d852c3" height="800" alt="Dashboard and Profile"/>
+</p>
+
+#### 🔹 5. Product Details & AI Chat
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/8f3e526c-b137-4589-a492-d8261c849636" height="800" alt="Product Details and AI Assistant"/>
+</p>
+
+#### 🔹 6. Product Search & Scan History
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/d9be9d51-6ff1-4860-8cfd-03df2ef56898" height="800" alt="Search and History"/>
+</p>
+
+---
+💡 *Note: This README file is continuously updated as new project screenshots and features are integrated.*
